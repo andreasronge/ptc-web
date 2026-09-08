@@ -21,6 +21,8 @@ pnpm run test:repair
 
 See [observed results](observed-run.md) for measured accuracy, latency, cost,
 model comparison, and links to retained evidence.
+For a closer look at the model conversation, see
+[inside an LLM repair](debug-turns.md).
 
 ## What changes
 
