@@ -1,7 +1,7 @@
 # PtcRunner integration
 
 This example follows the component and host-installation conventions in
-PtcRunner commit `13f7f508058f16f7d1dd7635312d237cbf58b8a3`.
+PtcRunner commit `f53170ebf304ef0caf3a8aca44233f3f255e2c5f`.
 
 Build `ptc-web`, then run the project with a public URL in `ptc.json`. The host
 document starts `../../dist/src/cli.js` over stdio and maps

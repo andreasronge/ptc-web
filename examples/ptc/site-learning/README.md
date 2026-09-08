@@ -81,5 +81,5 @@ and the exact generated example in [recipes/quotes.clj](recipes/quotes.clj).
 
 The integration follows PtcRunner's existing kernel tutorial and component
 conventions. Compatibility source checkout:
-`13f7f508058f16f7d1dd7635312d237cbf58b8a3`. The installed CLI records its own
+`f53170ebf304ef0caf3a8aca44233f3f255e2c5f`. The installed CLI records its own
 full revision on every invocation of the demo.

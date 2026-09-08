@@ -132,6 +132,6 @@ same baseline to make runs comparable.
 
 The implementation follows PtcRunner's existing `debug-a-failed-run` and
 kernel tutorial examples. Source compatibility commit:
-`13f7f508058f16f7d1dd7635312d237cbf58b8a3`. Every experiment also records the
+`f53170ebf304ef0caf3a8aca44233f3f255e2c5f`. Every experiment also records the
 installed CLI's full version and commit. No PtcRunner source is modified or
 required by this independent project.

@@ -10,7 +10,7 @@ import { startFixtureServer } from '../support/fixture-server.js'
 
 const execute = promisify(execFile)
 const PTC_RUNNER = resolve(process.env.PTC_RUNNER_CHECKOUT ?? '../ptc_runner')
-const PTC_RUNNER_COMMIT = '13f7f508058f16f7d1dd7635312d237cbf58b8a3'
+const PTC_RUNNER_COMMIT = 'f53170ebf304ef0caf3a8aca44233f3f255e2c5f'
 const hasPtcRunnerCheckout = existsSync(join(PTC_RUNNER, 'mix.exs'))
 
 test(

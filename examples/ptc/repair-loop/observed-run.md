@@ -2,7 +2,7 @@
 
 PtcRunner on PATH: 0.14.0, clean commit
 `7e78607e51017e5ce08a6482df1ee42d50d47c88`.
-Source-checkout compatibility: `13f7f508058f16f7d1dd7635312d237cbf58b8a3`.
+Source-checkout compatibility: `f53170ebf304ef0caf3a8aca44233f3f255e2c5f`.
 
 | Query | Layout | Initial failure  | Model calls | Final exact pairs | Wall time |
 | ----- | ------ | ---------------- | ----------: | ----------------: | --------: |
