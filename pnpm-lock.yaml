@@ -16,6 +16,9 @@ importers:
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
+      domhandler:
+        specifier: 5.0.3
+        version: 5.0.3
       ipaddr.js:
         specifier: 2.5.0
         version: 2.5.0
