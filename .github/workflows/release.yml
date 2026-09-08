@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  # Manual runs are always a rehearsal. There is deliberately no input to turn
+  # that off, so the only way to publish for real is to push a tag.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install chromium
+
+      - name: Tag must match the manifest version
+        if: github.event_name == 'push'
+        run: |
+          tagged="${GITHUB_REF_NAME#v}"
+          declared="$(node -p 'require("./package.json").version')"
+          test "$tagged" = "$declared" || {
+            echo "tag $tagged does not match package.json $declared" >&2
+            exit 1
+          }
+
+      - name: The secret authenticates against the registry
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # npm derives a provenance attestation from an OIDC token, and refuses
+      # when the manifest repository does not match the workflow repository.
+      - name: Provenance prerequisites are in place
+        run: |
+          test -n "$ACTIONS_ID_TOKEN_REQUEST_URL" || {
+            echo "no OIDC token available; id-token: write is missing" >&2
+            exit 1
+          }
+          declared="$(node -p '
+            require("./package.json").repository.url
+              .replace(/^git\+/, "")
+              .replace(/\.git$/, "")
+              .replace("https://github.com/", "")
+          ')"
+          test "$declared" = "$GITHUB_REPOSITORY" || {
+            echo "package.json repository $declared is not $GITHUB_REPOSITORY" >&2
+            exit 1
+          }
+
+      # Both paths run prepublishOnly first: clean, formatting, type checking,
+      # and the full suite. --dry-run does everything but upload.
+      - name: Rehearse the publish
+        if: github.event_name == 'workflow_dispatch'
+        run: npm publish --access public --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        if: github.event_name == 'push'
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

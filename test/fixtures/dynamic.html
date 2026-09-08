@@ -1,0 +1,10 @@
+<!doctype html><html><head><title>Dynamic inventory</title></head><body><main>
+<h1>Inventory</h1><ul id="items"></ul><div id="ready" hidden>ready</div>
+<script>
+setTimeout(async () => {
+  const response = await fetch('/api/items');
+  const items = await response.json();
+  document.querySelector('#items').innerHTML = items.map(item => `<li class="item" data-id="${item.id}">${item.name}</li>`).join('');
+  document.querySelector('#ready').hidden = false;
+}, 40);
+</script></main></body></html>

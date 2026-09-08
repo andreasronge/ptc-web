@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.tsbuildinfo
+*.tgz
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+.DS_Store
+.local/
+.ptc/
+private/
+.ptc-web-profile/

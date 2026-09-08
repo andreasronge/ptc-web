@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "workflow": {
+    "components": [{ "id": "web.example", "path": "workflow.clj" }],
+    "entry": "web.example/run"
+  },
+  "missions": {
+    "default": { "components": [], "data": {}, "providers": ["web"] }
+  },
+  "input": {
+    "value": {
+      "program": "(let [opened-call (tool/web.open {\"url\" \"https://example.com/\"}) opened (get opened-call :value) captured-call (tool/web.capture {\"handle_id\" (get opened \"handle_id\")}) captured (get captured-call :value) read-call (tool/web.read {\"snapshot_id\" (get captured \"snapshot_id\") \"format\" \"markdown\" \"extraction\" \"document\"}) read (get read-call :value) closed-call (tool/web.close {\"handle_id\" (get opened \"handle_id\")}) closed (get closed-call :value)] (return {\"title\" (get captured \"title\") \"content\" (get read \"content\") \"closed\" (get closed \"closed\")}))"
+    }
+  },
+  "providers": { "mission": [{ "name": "web" }] },
+  "limits": { "evaluation_timeout_ms": 20000, "run_duration_ms": 60000 }
+}

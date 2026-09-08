@@ -1,0 +1,75 @@
+{
+  "name": "ptc-web",
+  "version": "0.1.0",
+  "description": "A bounded browser-content MCP server for JavaScript-rendered pages.",
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "browser",
+    "playwright",
+    "web-content",
+    "ptc-runner"
+  ],
+  "homepage": "https://github.com/andreasronge/ptc-web#readme",
+  "bugs": "https://github.com/andreasronge/ptc-web/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreasronge/ptc-web.git"
+  },
+  "license": "MIT",
+  "author": "Andreas Ronge",
+  "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e",
+  "type": "module",
+  "bin": {
+    "ptc-web": "dist/src/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/src",
+    "recipes"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm run build && node --test --test-concurrency=1 dist/test/unit/*.test.js dist/test/integration/*.test.js dist/test/compat/*.test.js examples/ptc/repair-loop/policy.test.mjs",
+    "test:repair": "node --test examples/ptc/repair-loop/policy.test.mjs",
+    "demo:repair": "pnpm run build && node examples/ptc/repair-loop/run.mjs",
+    "test:dynamic-parser": "pnpm run build && node examples/ptc/dynamic-parser/run.mjs",
+    "test:unit": "pnpm run build && node --test --test-concurrency=1 dist/test/unit/*.test.js",
+    "test:integration": "pnpm run build && node --test --test-concurrency=1 dist/test/integration/*.test.js",
+    "test:ptc": "pnpm run build && node --test --test-concurrency=1 dist/test/compat/*.test.js",
+    "test:ptc:path": "pnpm run build && PTC_WEB_TEST_PATH_PTC=1 node --test --test-concurrency=1 dist/test/compat/ptc-path.test.js",
+    "verify": "pnpm run format:check && pnpm run typecheck && pnpm test",
+    "prepublishOnly": "pnpm run clean && pnpm run verify"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "@mozilla/readability": "0.6.0",
+    "cheerio": "1.2.0",
+    "ipaddr.js": "2.5.0",
+    "jsdom": "26.1.0",
+    "playwright": "1.63.0",
+    "turndown": "7.2.4",
+    "turndown-plugin-gfm": "1.0.2",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/jsdom": "27.0.0",
+    "@types/node": "26.5.0",
+    "@types/turndown": "5.0.6",
+    "prettier": "3.6.2",
+    "typescript": "6.0.3"
+  }
+}

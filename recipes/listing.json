@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "name": "representative-listing",
+  "container": ".story",
+  "fields": [
+    { "name": "id", "source": "attribute", "attribute": "data-id", "required": true },
+    { "name": "title", "selector": ".title", "required": true },
+    { "name": "url", "selector": ".title", "source": "attribute", "attribute": "href", "required": true },
+    { "name": "score", "selector": ".score" }
+  ]
+}

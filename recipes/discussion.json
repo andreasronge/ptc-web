@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "name": "representative-discussion-comments",
+  "container": ".comment",
+  "fields": [
+    { "name": "id", "source": "attribute", "attribute": "data-id", "required": true },
+    { "name": "parent_id", "source": "attribute", "attribute": "data-parent", "required": true },
+    { "name": "author", "selector": ".author" },
+    { "name": "body", "selector": ".body", "required": true }
+  ]
+}

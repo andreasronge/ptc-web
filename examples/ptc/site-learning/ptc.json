@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "workflow": {
+    "components": [
+      { "id": "demo.workflow", "path": "workflow.clj", "dependencies": ["kernel", "llm"] },
+      { "library": "kernel" },
+      { "library": "llm" }
+    ],
+    "entry": "demo.workflow/run"
+  },
+  "missions": {
+    "browser": {
+      "components": [
+        { "id": "demo.browser", "path": "browser.clj", "dependencies": ["site.recipe"] },
+        { "id": "site.recipe", "path": "site.clj" }
+      ],
+      "data": {},
+      "providers": ["web"]
+    }
+  },
+  "providers": { "workflow": [{ "name": "deepseek" }], "mission": [{ "name": "web" }] },
+  "input": { "value": { "phase": "probe", "url": "https://quotes.toscrape.com/tag/love/" } },
+  "limits": {
+    "run_duration_ms": 180000,
+    "evaluation_timeout_ms": 30000,
+    "workflow_timeout_ms": 180000,
+    "workflow_capability_calls": 8,
+    "mission_capability_calls": 16,
+    "subordinate_evaluations": 2,
+    "llm_request_output_tokens": 1200
+  }
+}

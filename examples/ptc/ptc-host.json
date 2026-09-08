@@ -1,0 +1,30 @@
+{
+  "install": {
+    "web": {
+      "source": "mcp",
+      "installation_revision": "ptc-web-0.1.0",
+      "transport": {
+        "type": "stdio",
+        "command": "node",
+        "cwd": "../..",
+        "args": ["dist/src/cli.js"],
+        "inherit_environment": true,
+        "env": {},
+        "start_timeout_ms": 15000
+      },
+      "tools": {
+        "page_open": { "as": "web.open", "effect": "read" },
+        "page_capture": { "as": "web.capture", "effect": "read" },
+        "page_read": { "as": "web.read", "effect": "read" },
+        "page_extract": { "as": "web.extract", "effect": "read" },
+        "page_find": { "as": "web.find", "effect": "read" },
+        "page_close": { "as": "web.close", "effect": "read" }
+      },
+      "ceilings": {
+        "timeout_ms": 20000,
+        "max_catalog_tools": 8,
+        "max_result_bytes": 262144
+      }
+    }
+  }
+}
