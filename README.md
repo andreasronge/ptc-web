@@ -115,8 +115,8 @@ does not depend on PtcRunner.
 
 ## Design
 
-- [Architecture and implementation sequence](docs/architecture.md)
-- [Fixture and evaluation plan](docs/fixtures.md)
+- [Library architecture](docs/architecture.md)
+- [Fixtures and tests](docs/fixtures.md)
 
 Search, arbitrary click/scroll operations, existing-Chrome integration, hosted
 extraction services, and a custom extension are intentionally outside this

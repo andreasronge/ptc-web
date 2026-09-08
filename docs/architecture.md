@@ -1,157 +1,78 @@
 # Architecture
 
-Design recorded 2026-09-07. The stdio, managed-browser, snapshot, Markdown,
-selector-extraction, and deterministic-fixture foundation is now implemented.
-It was compatibility-tested against PtcRunner commit
-`d98c4ba33de0eab99d7460dd298f0c794c5cbf42`.
-
-## Boundaries
+`ptc-web` is a TypeScript library and stdio MCP server for reading rendered web
+pages. It owns browser access, bounded page capture, content conversion, and
+structured extraction.
 
 ```text
-MCP client (PtcRunner or another client)
-  -> MCP server: schemas, handles, bounds, lifecycle
-    -> browser adapter: Playwright initially
-    -> snapshot store: bounded, expiring, immutable captures
-    -> extraction: article selection, Markdown, declarative records
+MCP client
+  -> MCP schemas and tool lifecycle
+    -> Playwright browser manager
+      -> immutable snapshot store
+        -> text, Markdown, find, and record extraction
 ```
 
-The MCP server owns rendering, DOM parsing, resource/access limits, readiness,
-snapshots, and formatting. PTC-Lisp owns task-specific selection, site recipes,
-pagination policy, normalization, deduplication, validation, and repair proposals.
-Do not implement an HTML parser in PTC-Lisp or require generated JavaScript for
-operations expressible as bounded selectors and field mappings.
+## Library surface
 
-## Content representations
+The package exports the main building blocks from `src/index.ts`:
 
-Return Markdown by default for reading, but retain a bounded source snapshot
-for structured extraction and diagnosis. Article selection is lossy and must
-not destroy the only representation of a discussion or listing.
+- `createServer` and `PtcWebRuntime` create the MCP server and its managed
+  runtime.
+- `AccessPolicy` validates network destinations.
+- `SnapshotStore` retains bounded, expiring DOM captures.
+- `extractRecords` applies declarative container and field selectors.
+- `configFromEnvironment` and `DEFAULT_LIMITS` provide server configuration.
 
-Use an object output schema and MCP structuredContent. Include the appropriate
-text representation required by the client/wire contract. PtcRunner validates
-structured results and exposes them as data to Lisp.
+The `ptc-web` executable connects the same server to stdio. Protocol messages
+use stdout; diagnostics use stderr.
 
-Proposed application-level result (not the complete MCP envelope):
+## Browser and access boundary
 
-```json
-{
-  "snapshot_id": "s_123",
-  "url": "https://example.org/article",
-  "title": "Example",
-  "format": "markdown",
-  "content": "# Example\n\n...",
-  "extraction": "article",
-  "coverage": {
-    "scope": "captured_dom",
-    "truncated": false,
-    "unloaded_content": "unknown"
-  },
-  "next_cursor": null
-}
-```
+Playwright runs Chromium in a dedicated persistent context. By default its
+profile is temporary and removed when the runtime closes. Page handles refer
+to live browser pages and are released explicitly with `page_close` or when the
+runtime shuts down.
 
-Specify capture time, extractor version, source identity, expiry, byte limits,
-and cursor semantics before implementing the final schema. Cursors must address
-an immutable snapshot; live DOM mutations cannot shift an existing read.
-Capture limits and response limits are separate. Never equate a complete read
-of a snapshot with having loaded an entire website discussion or dataset.
+Only HTTP(S) destinations are accepted. URL credentials and non-public network
+addresses are denied unless an exact local origin is explicitly configured.
+Every redirect and subrequest passes through the same policy. Service workers
+are disabled, and request counts and response-body sizes are bounded.
 
-## Tools
+## Snapshots and extraction
 
-| Tool           | Purpose                                                          |
-| -------------- | ---------------------------------------------------------------- |
-| `page_open`    | Open a URL with a bounded readiness condition; return a handle   |
-| `page_capture` | Capture current content; return metadata and a small preview     |
-| `page_read`    | Read bounded Markdown/text from a snapshot using a cursor        |
-| `page_extract` | Extract records using a declarative selector/field specification |
-| `page_find`    | Find passages in a snapshot                                      |
-| `page_close`   | Release owned browser resources                                  |
+`page_capture` copies the current DOM into an immutable snapshot. Snapshots
+have stable IDs, content hashes, capture metadata, expiry times, and byte-limit
+information. Closing a page does not remove its snapshots; they remain readable
+until they expire. Once the bounded store is full, new captures are rejected.
 
-Scoped click/scroll operations remain deferred. Avoid
-automatic full-page dumps after each operation. Expired handles, unavailable
-browser connections, blocked access, and incomplete capture need distinct
-outcomes. Cancellation must stop owned work and release resources within bounds.
+Content operations work from snapshots rather than the changing live DOM:
 
-DOM snapshots do not automatically preserve computed visibility, closed shadow
-roots, canvas content, cross-origin frames, or unloaded virtualized rows. Define
-what is captured and report unsupported or partial cases explicitly.
+- `page_read` converts a snapshot to bounded Markdown or text.
+- `page_find` returns literal passages from a selected representation.
+- `page_extract` maps repeated elements into records using CSS selectors.
 
-## MCP
+Pagination cursors are integrity-protected and bound to the snapshot and the
+operation's arguments. A cursor cannot be reused with a different query,
+representation, or extraction recipe.
 
-Support the released `2026-07-28` revision only. Use the official TypeScript SDK
-v2 (`@modelcontextprotocol/server`) and pin an exact tested package version.
-Reject older protocol revisions; do not introduce fallback handshakes.
+Article conversion uses Mozilla Readability. Document Markdown uses Turndown
+with GFM support, and structured record extraction uses Cheerio. The original
+bounded HTML remains available so lossy article extraction is never the only
+stored representation.
 
-Start with stdio, discovery, and tools with input/output schemas. Keep the
-catalog deterministic and implement the revision's cache/result metadata.
-Avoid dependencies on optional tasks, sampling, elicitation, or image results
-in the first PtcRunner integration. Use explicit handles for application state;
-do not depend on transport-level sessions.
+## MCP contract and limits
 
-Contract-test both the upstream protocol and PtcRunner's narrower supported
-profile. Check discovery, declared schemas, structured/text result handling,
-size limits, cancellation, and version refusal through a real client boundary.
+The server supports MCP revision `2026-07-28` through
+`@modelcontextprotocol/server` and rejects legacy initialization. It exposes a
+fixed catalog of six tools: `page_open`, `page_capture`, `page_read`,
+`page_extract`, `page_find`, and `page_close`.
 
-## Data sources and browser access
+Separate limits cover navigation time, open pages, requests per page, resource
+bytes, capture bytes, stored snapshots, extraction records, find matches, and
+serialized results. Errors distinguish invalid input, blocked access,
+unavailable resources, expiry, cancellation, and limit exhaustion.
 
-Prefer a configured supported API/feed or publisher-provided Markdown when it
-fits the task. JSON-LD can provide metadata, but is not evidence that the full
-page is represented. Use rendered DOM extraction when necessary. Record which
-source/backend produced the result; do not silently substitute authenticated
-browser content with an anonymous HTTP response.
-
-Keep search separate from reading a selected URL. A configured search API and
-a browser search recipe can return the same result contract. Do not make Google
-or Reddit mandatory dependencies of the core.
-
-Start with a dedicated Playwright profile. The existing Playwright extension
-supports user-selected tabs, but its documented integration is through
-Playwright MCP; a stable standalone bridge API has not been established here.
-Investigate that seam before choosing reuse versus a custom extension/native
-messaging bridge. Do not build on private APIs without evaluating maintenance.
-
-Enforce allowed tabs/origins and resource limits in the server. Credentials and
-browser profiles remain host-owned. Treat page content as untrusted data and
-do not expose it to an external extraction service without explicit host
-configuration. Network destinations and redirects require an access policy,
-including local/private destinations when a URL-fetching backend is offered.
-
-## Optional alternatives
-
-- Crawl4AI: Python browser crawling, filtered Markdown, CSS/XPath extraction;
-  useful comparator and alternative stack.
-- Trafilatura: article extraction and fallback algorithms; benchmark on the
-  same fixtures before adding a Python dependency.
-- Jina Reader / Firecrawl: hosted URL-to-content alternatives for public pages;
-  optional backends rather than required services. Check costs, licensing,
-  retention, and operational constraints if adopting or embedding them.
-
-No hidden LLM call in the default extraction path. Model-assisted recipe repair
-belongs in an explicit workflow with independent regression validation.
-
-## Implementation sequence
-
-1. Create a TypeScript package, pinned dependencies, and minimal latest-only
-   MCP discovery/tool round trip verified against PtcRunner.
-2. Implement a managed-browser adapter and bounded capture/read lifecycle.
-3. Add article Markdown and generic selector extraction with deterministic tests.
-4. Add fixture coverage, held-out evaluation, and explicit partial/blocked states.
-5. Demonstrate an optional PTC prelude and a validated layout-change repair.
-6. Evaluate existing-Chrome integration and live probes after the core works.
-
-## Research sources
-
-- [MCP release](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
-- [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
-- [Playwright Chrome extension](https://github.com/microsoft/playwright/tree/main/packages/extension)
-- [Readability](https://github.com/mozilla/readability)
-- [Turndown](https://github.com/mixmark-io/turndown)
-- [Cheerio](https://github.com/cheeriojs/cheerio)
-- [Crawl4AI extraction](https://docs.crawl4ai.com/extraction/no-llm-strategies/)
-- [Crawl4AI Markdown](https://docs.crawl4ai.com/core/markdown-generation/)
-- [Trafilatura extraction](https://trafilatura.readthedocs.io/en/latest/extraction-overview.html)
-- [Jina Reader architecture](https://github.com/jina-ai/reader/blob/main/architecture.md)
-- [Firecrawl scraping](https://docs.firecrawl.dev/features/scrape)
-- [Publisher Markdown negotiation](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/)
-- [Brave Search API](https://api-dashboard.search.brave.com/api-reference/web/search/get)
+Captured DOM does not include content that the page has not loaded, closed
+shadow roots, canvas pixels, or inaccessible cross-origin frames. Tool results
+report truncation and blocked-request information so callers can distinguish a
+complete snapshot read from complete coverage of a website.
