@@ -1,7 +1,32 @@
 # Change parser code without restarting PTC Runner
 
-This example shows how PTC Runner can test, save, and reuse a screen-scraping
-parser while it is running.
+## The complete idea
+
+The examples in this repository demonstrate the pieces of a self-repairing
+screen scraper:
+
+- [Site learning](../site-learning/README.md) uses an LLM to learn selectors and
+  build an extraction component.
+- [Repair loop](../repair-loop/README.md) calls an LLM only when an existing
+  extractor fails, then tests the proposed replacement.
+- This example shows how new parser code can be saved, reloaded, and used
+  without restarting PTC Runner.
+
+Combined, a normal query would use no LLM. If its output failed validation, a
+repair mission would inspect the failure and propose parser code. The workflow
+would test that code on the broken page and a held-out page, save it only when
+both pass, and then reload it for later queries.
+
+![Combined design for a self-repairing screen scraper: an LLM is called after a failed query, candidate parser code is validated, and accepted code is saved and reloaded through restricted missions.](combined-repair.png)
+
+All these parts are tested separately. Connecting them into this exact flow is
+left as an exercise. 🙂
+
+## The runnable example
+
+The example in this directory starts with two supplied parsers, so it makes no
+model calls. It tests, saves, and reuses the accepted parser while PTC Runner is
+still running.
 
 PTC Runner separates work into two kinds of environments:
 
