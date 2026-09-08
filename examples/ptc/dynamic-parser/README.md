@@ -37,6 +37,12 @@ reusable and gives the workflow an auditable place to reject a bad suggestion.
 The [repair transcript walkthrough](../repair-loop/debug-turns.md) shows what the
 model reads and generates in the related repair experiment.
 
+The same pattern is not limited to web scraping. It could also repair small,
+constrained adapters for changed API responses, file formats, document layouts,
+message schemas, or other integrations: run deterministic code normally, use a
+bounded model investigation after a contract failure, and accept the generated
+artifact only after independent validation.
+
 Automatic selector repair and LLM-generated scrapers are not new by themselves.
 This example is about combining those ideas with small capabilities, immutable
 evidence, and model-free validation. It is still a toy problem: the pages are
