@@ -22,6 +22,30 @@ both pass, and then reload it for later queries.
 All these parts are tested separately. Connecting them into this exact flow is
 left as an exercise. 🙂
 
+## Why this example exists
+
+Browser extraction often uses either a fixed parser, which is fast but breaks
+when the page changes, or an LLM on every request, which is slower and harder to
+control. These examples explore a third option: keep normal queries
+deterministic, call an LLM only after a detected failure, turn its small proposal
+into ordinary parser code, and promote that code only after independent checks.
+
+The interesting part is the boundary around the model. It can inspect bounded,
+read-only evidence and propose selectors, but it cannot save or approve its own
+repair. The accepted parser then runs without an LLM. This makes the result
+reusable and gives the workflow an auditable place to reject a bad suggestion.
+The [repair transcript walkthrough](../repair-loop/debug-turns.md) shows what the
+model reads and generates in the related repair experiment.
+
+Automatic selector repair and LLM-generated scrapers are not new by themselves.
+This example is about combining those ideas with small capabilities, immutable
+evidence, and model-free validation. It is still a toy problem: the pages are
+synthetic, the expected records are known exactly, and the layout changes are
+simple. Real sites add authentication, interaction, pagination, generated class
+names, ambiguous data, and cases where no reliable held-out answer exists. The
+example demonstrates an architecture, not proof that arbitrary scrapers can
+repair themselves safely.
+
 ## The runnable example
 
 The example in this directory starts with two supplied parsers, so it makes no
